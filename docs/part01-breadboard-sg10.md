@@ -36,12 +36,7 @@ Because the signal levels coming from the SG-10 could potentially exceed the max
 
 KICAD Schematic: [sg10-ft232h.sch](../hardware/kicad/SG10_FT232H/SG10_FT232H.kicad_sch)
 
-### Why Was This Stage Necessary?
 
-1. **Filtering Power Supply Noise (C1, C2):** The SG-10 is sensitive to power supply fluctuations, which could introduce unwanted bias or noise into the output signal.
-2. **Transistor Protection:** Prevented unexpected voltage spikes or high currents from the SG-10 from damaging the sensitive 3.3 V logic-level input of the FT232H.
-3. **AC Coupling (C3):** Removed the DC offset component, passing only the pure AC voltage fluctuations (the noise) to the sampling stage.
-4. **DC Bias / Pull-Down (R1, R2):** Anchored the baseline around 0 V (GND) to maintain a stable digital sampling threshold.
 
 ## 4. Initial Benchmark & Entropy Testing (Standard Read vs. Bitbang Mode)
 
@@ -83,8 +78,6 @@ To evaluate how data acquisition timing affects signal fidelity, I tested two di
 1. **Standard Read Mode:** Continuous byte streaming over standard USB buffers.
 2. **Bitbang Mode:** Precise GPIO timing control over the sampling window.
 
-
-To validate the noise quality and sample stability, I captured a 10 KB raw dataset 10,240 bytes from the FT232H interface and ran it through the standard `ent` (Pseudorandom Number Sequence Test Program). 
 
 #### 1. Standard Read Mode Test
 
@@ -166,10 +159,6 @@ Serial correlation coefficient is 0.020705 (totally uncorrelated = 0.0).
 
 ### Understanding the Benchmark Parameters & Results
 
-To evaluate the statistical quality of our hardware entropy source, we used John Walker’s industry-standard `ent` utility. Below is a breakdown of what each parameter measures and how our two acquisition modes compare.
-
-
-
 #### 1. Shannon Entropy (Bits per Byte)
 * **What it measures:** The density of randomness. An ideal physical random source contains exactly 8.0 bits of information per byte ($100\%$ unpredictable).
 * **Our Results:**
@@ -197,8 +186,8 @@ To evaluate the statistical quality of our hardware entropy source, we used John
 
 
 
-#### 4. Monte Carlo Value for $\pi$
-* **What it measures:** A spatial randomness test. Bytes are grouped into $2\text{D}$ coordinate pairs to estimate the value of $\pi$ based on whether points fall inside a circle inscribed in a square.
+#### 4. Monte Carlo Value for π
+* **What it measures:** A spatial randomness test. Bytes are grouped into 2D coordinate pairs to estimate the value of π based on whether points fall inside a circle inscribed in a square.
 * **Our Results:**
   * **Standard Read:** π ≈ 3.2614 *(Error: 3.81%)*
   * **Bitbang Mode:** π ≈ 3.1347 *(Error: 0.22%)*
