@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantRNG | Part 1 - The First Working Prototype</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 0.18; transform: scale(1); }
+            50% { opacity: 0.35; transform: scale(1.05); }
+        }
+        .glow { animation: pulse-slow 10s infinite ease-in-out; }
+        .article h1, .article h2, .article h3, .article h4 {
+            scroll-margin-top: 6rem;
+        }
+        .article p, .article li, .article td, .article th, .article summary {
+            line-height: 1.75;
+        }
+    </style>
+</head>
+<body class="bg-[#0B0F19] text-gray-200 font-sans min-h-screen overflow-x-hidden relative">
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl glow"></div>
+    <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl glow" style="animation-delay: 4s;"></div>
+
+    <header class="relative z-10 container mx-auto px-6 py-6 flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between sm:items-center border-b border-gray-900/80">
+        <a href="index.html" class="text-xl font-mono font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">
+            QUANT<span class="text-gray-100">RNG</span>
+        </a>
+        <div class="flex items-center gap-3 text-xs sm:text-sm font-mono text-gray-400">
+            <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-ping"></span> Part 1: Breadboard Prototype</span>
+            <a href="index.html" class="text-cyan-400 hover:text-cyan-300 transition-colors">Home</a>
+        </div>
+    </header>
+
+    <main class="relative z-10 container mx-auto px-6 py-10 md:py-14 max-w-5xl">
+        <article class="article">
+            <section class="mb-12">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/5 text-cyan-400 text-xs font-mono mb-6">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    Hardware QRNG Log
+                </div>
+                <h1 class="text-3xl md:text-5xl font-bold tracking-tight text-white mb-4 leading-tight">
+                    The Quest for Quantum Noise
+                    <span class="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">Part 1: The First Working Prototype</span>
+                </h1>
+                <p class="text-base md:text-xl text-gray-400 max-w-3xl font-mono">
+                    SG-10 noise source, transistor protection on breadboard, and FT232H interface.
+                </p>
+            </section>
+
+            <section class="grid gap-8 lg:grid-cols-[1.4fr_0.8fr] items-start mb-12">
+                <div class="space-y-6">
+                    <div class="rounded-2xl border border-gray-800 bg-gray-900/50 backdrop-blur-sm p-6 md:p-8 shadow-2xl shadow-cyan-500/5">
+                        <h2 class="text-2xl font-bold text-white mb-4">1. Objective &amp; Setup</h2>
+                        <p>
+                            This first test was kept deliberately simple: build a working analog front end on a breadboard and see if the noise from an <strong>SG-10</strong> source could be read safely by an <strong>FT232H</strong> USB 2.0 interface.
+                        </p>
+                        <p class="mt-4">
+                            The SG-10 output can go beyond what the FT232H input pin should see, so I added a small protection and conditioning stage between the source and the controller.
+                        </p>
+                    </div>
+
+                    <div class="rounded-2xl border border-gray-800 bg-gray-900/50 backdrop-blur-sm p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-white mb-4">2. Hardware Architecture</h2>
+                        <p class="mb-5 text-gray-400">Breadboard phase overview.</p>
+                        <img src="docs/images/qrng_sg10_fth.jpg" alt="SG-10 noise source connected to FT232H on a breadboard" class="w-full rounded-xl border border-gray-800 bg-gray-950/60 object-cover">
+                        <div class="mt-6">
+                            <h3 class="text-lg font-semibold text-cyan-400 mb-3">Component List</h3>
+                            <ul class="grid gap-2 md:grid-cols-2 list-disc list-inside text-gray-300">
+                                <li><strong>SG-10:</strong> Noise source</li>
+                                <li><strong>FT232H breakout board:</strong> USB 2.0 sampling interface</li>
+                                <li><strong>1x NPN transistor (2N3904):</strong> Protection element</li>
+                                <li><strong>1x Capacitor (100 nF):</strong> AC coupling</li>
+                                <li><strong>2x Capacitor (220 uF, 100 nF):</strong> Power filtering</li>
+                                <li><strong>2x Resistors (4.7 kOhm, 100 kOhm):</strong> Limiting and biasing</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <aside class="space-y-6 lg:sticky lg:top-6">
+                    <div class="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-6 backdrop-blur-sm">
+                        <h3 class="text-sm uppercase tracking-[0.2em] text-cyan-300 font-mono mb-4">Quick Facts</h3>
+                        <dl class="space-y-4 font-mono text-sm">
+                            <div>
+                                <dt class="text-gray-500">Controller</dt>
+                                <dd class="text-gray-100">FT232H</dd>
+                            </div>
+                            <div>
+                                <dt class="text-gray-500">Source</dt>
+                                <dd class="text-gray-100">SG-10 noise module</dd>
+                            </div>
+                            <div>
+                                <dt class="text-gray-500">Goal</dt>
+                                <dd class="text-gray-100">Safe random signal sampling</dd>
+                            </div>
+                            <div>
+                                <dt class="text-gray-500">Outcome</dt>
+                                <dd class="text-emerald-400">Bitbang path performed better</dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <div class="rounded-2xl border border-gray-800 bg-gray-900/50 p-6">
+                        <h3 class="text-lg font-semibold text-white mb-3">Files</h3>
+                        <ul class="space-y-3 text-sm">
+                            <li><a class="text-cyan-400 hover:text-cyan-300" href="software/python/sg10_ft232h/fth_normal.py">fth_normal.py</a></li>
+                            <li><a class="text-cyan-400 hover:text-cyan-300" href="software/python/sg10_ft232h/fth_bitbang.py">fth_bitbang.py</a></li>
+                            <li><a class="text-cyan-400 hover:text-cyan-300" href="hardware/kicad/SG10_FT232H/SG10_FT232H.kicad_sch">KiCad schematic</a></li>
+                        </ul>
+                    </div>
+                </aside>
+            </section>
+
+            <section class="rounded-2xl border border-gray-800 bg-gray-900/50 backdrop-blur-sm p-6 md:p-8 mb-12">
+                <h2 class="text-2xl font-bold text-white mb-4">3. How It Works Step-by-Step</h2>
+                <ul class="space-y-4 list-disc list-inside text-gray-300">
+                    <li><strong>Power Supply Filtering:</strong> The 220 uF and 100 nF capacitors sit in parallel between 12V and GND, right before the SG-10 module. That helps take the edge off small bench-supply fluctuations.</li>
+                    <li><strong>AC Coupling:</strong> The noise from the J1 output passes through a 100 nF capacitor. That blocks the DC component and leaves the AC part for the transistor stage.</li>
+                    <li><strong>Operating Point (Bias):</strong> The 100 kOhm resistor connected between the Base and GND (Emitter) keeps the transistor near its switching threshold, so small positive noise spikes can flip the output state.</li>
+                    <li><strong>Digital Signal Generation:</strong>
+                        <ul class="mt-3 ml-6 space-y-2 list-disc">
+                            <li>When the noise produces a positive spike, the transistor turns on and pulls the Collector down to GND (Logical 0).</li>
+                            <li>When the noise drops to zero or goes negative, the transistor turns off and the 4.7 kOhm pull-up resistor pulls the Collector up to the FT232H's internal 3.3V level (Logical 1).</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold text-cyan-400 mb-3">Circuit Diagram Concept</h3>
+                    <img src="docs/images/schematics_sg10-fth.png" alt="Schematic diagram for SG-10 to FT232H interface" class="w-full rounded-xl border border-gray-800 bg-gray-950/60 object-cover">
+                    <p class="mt-4 text-sm text-gray-400">KICAD Schematic: <a class="text-cyan-400 hover:text-cyan-300" href="hardware/kicad/SG10_FT232H/SG10_FT232H.kicad_sch">sg10-ft232h.sch</a></p>
+                </div>
+            </section>
+
+            <section class="rounded-2xl border border-gray-800 bg-gray-900/50 backdrop-blur-sm p-6 md:p-8 mb-12">
+                <h2 class="text-2xl font-bold text-white mb-4">4. Initial Benchmark &amp; Entropy Testing</h2>
+                <h3 class="text-lg font-semibold text-cyan-400 mb-4">Environment Setup &amp; Prerequisites</h3>
+                <details class="rounded-xl border border-gray-800 bg-gray-950/50 p-5">
+                    <summary class="cursor-pointer text-gray-100 font-semibold">Click here for step-by-step setup instructions (Virtualenv, Drivers &amp; Permissions)</summary>
+                    <div class="mt-5 space-y-5 text-sm md:text-base text-gray-300">
+                        <div>
+                            <h4 class="font-semibold text-white mb-2">1. Create a Virtual Environment &amp; Install Dependencies</h4>
+                            <pre class="overflow-x-auto rounded-xl border border-gray-800 bg-gray-950 p-4 text-cyan-300 text-sm"><code>python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt</code></pre>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-white mb-2">2. Hardware Driver &amp; USB Permissions</h4>
+                            <p class="mb-3">The pyftdi library talks directly to the FT232H via standard libusb drivers.</p>
+                            <pre class="overflow-x-auto rounded-xl border border-gray-800 bg-gray-950 p-4 text-cyan-300 text-sm"><code>echo 'SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6014", MODE="0666"' | sudo tee /etc/udev/rules.d/11-ftdi.rules
+sudo udevadm control --reload-rules</code></pre>
+                            <ul class="mt-3 space-y-2 list-disc list-inside">
+                                <li>Windows: use Zadig to replace the driver for Interface 0 with WinUSB or libusbK.</li>
+                                <li>macOS: ensure no native VCP drivers are locking the chip.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </details>
+
+                <h3 class="text-lg font-semibold text-cyan-400 mt-8 mb-4">Testing Scenarios</h3>
+                <ol class="space-y-4 list-decimal list-inside text-gray-300">
+                    <li><strong>Standard Read Mode:</strong> Continuous byte streaming over the regular USB buffer path.</li>
+                    <li><strong>Bitbang Mode:</strong> GPIO timing that is controlled more directly during sampling.</li>
+                </ol>
+
+                <div class="mt-8 grid gap-6 xl:grid-cols-2">
+                    <div class="rounded-xl border border-gray-800 bg-gray-950/50 p-5">
+                        <h4 class="font-semibold text-white mb-3">Standard Read Mode</h4>
+                        <p class="text-sm text-gray-400 mb-3">Python script: <a class="text-cyan-400 hover:text-cyan-300" href="software/python/sg10_ft232h/fth_normal.py">fth_normal.py</a></p>
+                        <pre class="overflow-x-auto rounded-lg bg-black/40 p-4 text-sm text-gray-300"><code>(venv) :~/Oleesoft/fth-test$ python fth_normal.py
+Smart entropy collection started (stride: 100)...
+Progress: 100.0% (10 KB / 10 KB)
+
+Done! Runtime: 72.97 s | Speed: 0.14 KB/s</code></pre>
+                        <pre class="mt-4 overflow-x-auto rounded-lg bg-black/40 p-4 text-sm text-gray-300"><code>Entropy = 7.759041 bits per byte.
+
+Optimum compression would reduce the size
+of this 10240 byte file by 3 percent.
+
+Chi square distribution for 10240 samples is 3793.05, and randomly
+would exceed this value less than 0.01 percent of the times.
+
+Arithmetic mean value of data bytes is 128.0612 (127.5 = random).
+Monte Carlo value for Pi is 3.261430246 (error 3.81 percent).
+Serial correlation coefficient is -0.014158 (totally uncorrelated = 0.0).</code></pre>
+                    </div>
+                    <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+                        <h4 class="font-semibold text-white mb-3">Bitbang Mode</h4>
+                        <p class="text-sm text-gray-400 mb-3">Python script: <a class="text-cyan-400 hover:text-cyan-300" href="software/python/sg10_ft232h/fth_bitbang.py">fth_bitbang.py</a></p>
+                        <pre class="overflow-x-auto rounded-lg bg-black/40 p-4 text-sm text-gray-300"><code>(venv) :~/Oleesoft/fth-test$ python fth_bitbang.py
+=======================================================
+ FT232H HARDWARE RANDOM NUMBER GENERATOR (TRNG) v1.0
+=======================================================
+PHASE 1: High-speed raw data collection from USB...
+--> Buffer size: 128 MB. Please wait...
+-> Hardware read complete! Time: 18.86 s (1.91 MB/s)
+
+PHASE 2: Mathematical post-processing (vectorized Von Neumann filtering)...
+-> Filtering complete! Remaining clean sample: 2976 bytes.
+
+PHASE 3: Cryptographic whitening (SHA-256 avalanche effect)...
+=======================================================
+ SUCCESSFUL SAVE: noise_bb.bin
+ Final file size: 1472 bytes (1 KB)
+ Total runtime: 18.92 seconds
+=======================================================</code></pre>
+                        <pre class="mt-4 overflow-x-auto rounded-lg bg-black/40 p-4 text-sm text-gray-300"><code>Entropy = 7.874101 bits per byte.
+
+Optimum compression would reduce the size
+of this 1472 byte file by 1 percent.
+
+Chi square distribution for 1472 samples is 250.09, and randomly
+would exceed this value 57.51 percent of the times.
+
+Arithmetic mean value of data bytes is 126.6984 (127.5 = random).
+Monte Carlo value for Pi is 3.134693878 (error 0.22 percent).
+Serial correlation coefficient is 0.020705 (totally uncorrelated = 0.0).</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <section class="rounded-2xl border border-gray-800 bg-gray-900/50 backdrop-blur-sm p-6 md:p-8 mb-12 overflow-x-auto">
+                <h2 class="text-2xl font-bold text-white mb-4">Summary</h2>
+                <table class="min-w-full text-sm md:text-base border-collapse">
+                    <thead>
+                        <tr class="text-left border-b border-gray-800">
+                            <th class="py-3 pr-4 text-gray-400">Metric</th>
+                            <th class="py-3 pr-4 text-gray-400">Standard Read</th>
+                            <th class="py-3 pr-4 text-emerald-400">Bitbang Mode</th>
+                            <th class="py-3 pr-4 text-gray-400">Theoretical Ideal</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-900">
+                        <tr>
+                            <td class="py-3 pr-4 font-semibold text-white">Entropy</td>
+                            <td class="py-3 pr-4">7.7590 bits/byte</td>
+                            <td class="py-3 pr-4 font-semibold text-emerald-400">7.8741 bits/byte</td>
+                            <td class="py-3 pr-4">8.0000 bits/byte</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 pr-4 font-semibold text-white">Chi-Square Susceptibility</td>
+                            <td class="py-3 pr-4">&lt; 0.01% <span class="text-gray-500">(Pattern bias)</span></td>
+                            <td class="py-3 pr-4 font-semibold text-emerald-400">57.51% <span class="text-gray-500">(Looks random)</span></td>
+                            <td class="py-3 pr-4">~50.00%</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 pr-4 font-semibold text-white">Mean Byte Value</td>
+                            <td class="py-3 pr-4">128.0612</td>
+                            <td class="py-3 pr-4 font-semibold text-emerald-400">126.6984</td>
+                            <td class="py-3 pr-4">127.5000</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 pr-4 font-semibold text-white">Monte Carlo π Error</td>
+                            <td class="py-3 pr-4">3.81%</td>
+                            <td class="py-3 pr-4 font-semibold text-emerald-400">0.22%</td>
+                            <td class="py-3 pr-4">0.00%</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 pr-4 font-semibold text-white">Serial Correlation</td>
+                            <td class="py-3 pr-4">-0.0141</td>
+                            <td class="py-3 pr-4 font-semibold text-emerald-400">0.0207</td>
+                            <td class="py-3 pr-4">0.0000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="space-y-8">
+                <div class="rounded-2xl border border-gray-800 bg-gray-900/50 backdrop-blur-sm p-6 md:p-8">
+                    <h2 class="text-2xl font-bold text-white mb-4">5. Test Results &amp; Key Findings</h2>
+                    <div class="space-y-6 text-gray-300">
+                        <div>
+                            <h3 class="text-lg font-semibold text-cyan-400 mb-2">Shannon Entropy</h3>
+                            <p>Both modes stay close to the ideal 8.0 bits per byte, but the Bitbang path comes out a bit cleaner.</p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-cyan-400 mb-2">Chi-Square Test Susceptibility</h3>
+                            <p>The clearest difference between the two modes is the spread of byte values. Standard Read picks up more USB buffering and transfer timing artifacts.</p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-cyan-400 mb-2">Arithmetic Mean</h3>
+                            <p>Both modes stay close to the 127.5 target, so there is no obvious DC drift in the output.</p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-cyan-400 mb-2">Monte Carlo Value for π</h3>
+                            <p>The Bitbang run does a bit better here, which suggests fewer obvious 2D patterns in the byte stream.</p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-cyan-400 mb-2">Serial Correlation Coefficient</h3>
+                            <p>Both values are close to zero, so there is no strong sign of memory effect in the data.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl border border-gray-800 bg-gray-900/50 backdrop-blur-sm p-6 md:p-8">
+                    <h2 class="text-2xl font-bold text-white mb-4">6. Summary &amp; Next Steps</h2>
+                    <p class="mb-4">We turned a noisy transistor stage into a working, USB-connected hardware quantum random number generator prototype on a breadboard.</p>
+                    <div class="grid gap-5 md:grid-cols-2">
+                        <div class="rounded-xl border border-gray-800 bg-gray-950/50 p-5">
+                            <h3 class="text-lg font-semibold text-emerald-400 mb-2">What We Achieved</h3>
+                            <ul class="space-y-2 list-disc list-inside text-gray-300">
+                                <li>The noise source is usable as a random signal.</li>
+                                <li>The Bitbang path gives cleaner results than the basic USB read path.</li>
+                                <li>The byte stream does not show much obvious correlation.</li>
+                            </ul>
+                        </div>
+                        <div class="rounded-xl border border-gray-800 bg-gray-950/50 p-5">
+                            <h3 class="text-lg font-semibold text-cyan-400 mb-2">Why We Need a PCB</h3>
+                            <ul class="space-y-2 list-disc list-inside text-gray-300">
+                                <li>Unshielded jumper wires pick up mains hum and EMI.</li>
+                                <li>Long breadboard traces add parasitic capacitance.</li>
+                                <li>Loose wiring is fine for a proof of concept, not for a stable cryptographic tool.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-5">
+                        <h3 class="text-lg font-semibold text-white mb-2">Coming Up in Part 2</h3>
+                        <p class="text-gray-300">The next article moves the circuit onto a proper PCB and connects it to an RP2350-based sampling setup with cleaner routing, lower EMI, and better manufacturing readiness.</p>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl border border-gray-800 bg-gray-900/50 backdrop-blur-sm p-6 md:p-8 mb-10">
+                    <p class="text-gray-300">
+                        If you want to look at the underlying files, the <a class="text-cyan-400 hover:text-cyan-300" href="https://github.com/quantrng/quantrng.github.io">QuantRNG GitHub Repository</a> has the raw entropy datasets, Python acquisition scripts, and early schematic drafts.
+                    </p>
+                </div>
+            </section>
+        </article>
+    </main>
+
+    <footer class="relative z-10 container mx-auto px-6 py-6 text-center text-xs font-mono text-gray-600 border-t border-gray-950">
+        &copy; 2026 QuantRNG. Powered by Oleesoft. All rights reserved.
+    </footer>
+</body>
+</html>
